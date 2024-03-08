@@ -1,8 +1,7 @@
 "use client";
-
-import { cardsData } from "@/bin/CardsData";
 import { useEffect, useState } from "react";
 import { Draggable, Droppable, DropResult } from "react-beautiful-dnd";
+import axios from "axios";
 import LoadingSkeleton from "./LoadingSkeleton";
 import { DndContext } from "@/context/DndContext";
 
@@ -17,6 +16,7 @@ interface Cards {
 
 const DndExample = () => {
   const [data, setData] = useState<Cards[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -47,7 +47,29 @@ const DndExample = () => {
   };
 
   useEffect(() => {
-    setData(cardsData);
+    // Sample initial data
+    const initialData: Cards[] = [
+      {
+        id: 0,
+        title: "Main Page",
+        components: [
+          { id: 100, name: "Card1" },
+          { id: 200, name: "Card2" },
+        ],
+      },
+      {
+        id: 1,
+        title: "Component Selection",
+        components: [
+          { id: 300, name: "Card3" },
+          { id: 400, name: "Card4" },
+          { id: 500, name: "Card5" },
+          { id: 600, name: "Card6" },
+          { id: 700, name: "Card7" },
+        ],
+      },
+    ];
+    setData(initialData);
   }, []);
 
   const removeComponent = (cardId: number, componentIndex: number) => {
@@ -59,14 +81,36 @@ const DndExample = () => {
     setData(newData);
   };
 
-  if (!data.length) {
+  const addNewSection = () => {
+    const newId = data.length;
+    const newSection: Cards = {
+      id: newId,
+      title: `Section ${newId}`,
+      components: [],
+    };
+    setData([...data, newSection]);
+  };
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      await axios.post("YOUR_BACKEND_API_URL", data);
+      alert("Data submitted successfully!");
+    } catch (error) {
+      console.error("Error while submitting data:", error);
+      alert("Failed to submit data. Please try again.");
+    }
+    setIsLoading(false);
+  };
+
+  if (isLoading) {
     return <LoadingSkeleton />;
   }
 
   return (
     <DndContext onDragEnd={onDragEnd}>
       <h1 className="text-center mt-8 mb-3 font-bold text-[25px] ">
-        Designer2
+        Drag and Drop Application
       </h1>
       <div className="flex gap-4 justify-between my-20 mx-4 flex-col lg:flex-row">
         {data.map((val, index) => (
@@ -113,6 +157,20 @@ const DndExample = () => {
             )}
           </Droppable>
         ))}
+      </div>
+      <div className="text-center">
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 mr-4"
+          onClick={addNewSection}
+        >
+          Add New Section
+        </button>
+        <button
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
+          onClick={handleSubmit}
+        >
+          Submit
+        </button>
       </div>
     </DndContext>
   );
